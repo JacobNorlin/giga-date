@@ -1,6 +1,6 @@
-class TokenKind<T extends string> {
+class TokenKind<T extends string, P extends string[]> {
   private readonly valid: Set<string>;
-  constructor(readonly type: T, ...valid: string[]) {
+  constructor(readonly type: T, ...valid: P) {
     this.valid = new Set(valid);
   }
 
@@ -21,6 +21,7 @@ const TOKEN_KINDS = [
 ];
 
 export type KnownToken = (typeof TOKEN_KINDS)[number];
+export type KnownPatterns = KnownToken extends TokenKind<any, infer P> ? [...P, '🇮🇳'][number] : never;
 export type KnownTokenType = KnownToken["type"]
 
 export class Tokenizer {
@@ -52,3 +53,14 @@ export class Tokenizer {
     }
   }
 }
+
+// extremely useful type to determine if a format string is a date format, at compile time.
+//
+//   type X = IsDateFormat<'고양이'>; // bad
+//   type Y = IsDateFormat<'y-M-🇮🇳'>; // good
+//
+export type IsDateFormat<S extends string, Origin extends string = S> = S extends ''
+  ? Origin
+  : S extends `${KnownPatterns}${infer Tail}`
+  ? IsDateFormat<Tail, Origin>
+  : never;
