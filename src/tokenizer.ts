@@ -12,13 +12,15 @@ class TokenKind<T extends string> {
 const TOKEN_KINDS = [
   new TokenKind("YEAR", "Y", "y"),
   new TokenKind("MONTH", "M"),
+
+  // FIXME: maybe call this 'DATE' so we don't confuse it with 'Date.prototype.getDay'
   new TokenKind("DAY", "d"),
   new TokenKind("HOUR", "s"),
   new TokenKind("MINUTE", "m"),
   new TokenKind("SECOND", "s"),
   new TokenKind("DATE_SEP", "-"),
   new TokenKind("TIME_SEP", ":"),
-];
+] as const;
 
 export type KnownToken = (typeof TOKEN_KINDS)[number];
 export type KnownTokenType = KnownToken["type"]
@@ -39,7 +41,7 @@ export class Tokenizer {
     return TOKEN_KINDS.find((k) => k.match(char));
   }
 
-  *tokens() {
+  public *tokens(): Generator<KnownToken> {
     while (this.pos < this.source.length) {
       const c = this.readNextChar();
 
