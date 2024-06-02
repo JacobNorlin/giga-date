@@ -1,3 +1,4 @@
+import { DateParser } from "./date-parser";
 import type { KnownParserRule } from "./format-parser";
 
 type Pattern =
@@ -39,44 +40,20 @@ export const inlineFormatPatterns: { [K in Pattern]: string } = {
   "-": `out += "-"`,
 };
 
-type Parser = (value: string, date: Date, pos: number) => Date;
-
-const noopParser = (value: string, date: Date, pos: number) => date;
-
-export const parserPatterns: { [K in Pattern]: Parser } = {
-  yyyy: (value, date, pos) => {
-    const year = Number(value.slice(pos, pos + 4));
-    if (Number.isNaN(year)) {
-      throw Error(`Expected yyyy`);
-    }
-    date.setFullYear(year);
-    return date;
-  },
-  yy: (value, date, pos) => {
-    const year = Number("19" + value.slice(pos, pos+2))
-    if(Number.isNaN(year)){
-      throw Error("Expected yy")
-    }
-
-    date.setFullYear(year);
-    return date;
-  },
-  MM: (value, date, pos) => {
-    const month = NUmber(value.slice(pos))
-  }
-  "-": noopParser,
-  "T": noopParser,
-  ":": noopParser,
-
-
-};
-
 export class FormatCodegen {
-  constructor(private readonly ast: IterableIterator<KnownParserRule>) {}
+  private readonly rules: KnownParserRule[];
+
+  constructor(ast: IterableIterator<KnownParserRule>) {
+    this.rules = Array.from(ast);
+  }
+
+  getParser() {
+    return new DateParser(this.rules);
+  }
 
   getFormatter() {
     const formatters: Formatter[] = [];
-    for (const rule of this.ast) {
+    for (const rule of this.rules) {
       switch (rule.type) {
         case "yyyy":
           formatters.push(formatPatterns["yyyy"]);
@@ -119,7 +96,7 @@ export class FormatCodegen {
 
   getTurboFormatter() {
     let body = ["let out = '';"];
-    for (const rule of this.ast) {
+    for (const rule of this.rules) {
       switch (rule.type) {
         case "yyyy":
           body.push(inlineFormatPatterns["yyyy"]);

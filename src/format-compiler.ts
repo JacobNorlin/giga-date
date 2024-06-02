@@ -1,3 +1,4 @@
+import type { DateParser } from "./date-parser";
 import { FormatCodegen } from "./format-codegen";
 import { FormatParser } from "./format-parser";
 import { FormatTokenizer } from "./format-tokenizer";
@@ -13,22 +14,19 @@ export class FormatCompiler {
   }
 
   compile(formatString: string) {
-    if (this.formatterCache.has(formatString)) {
-      return this.formatterCache.get(formatString)!;
-    }
-
     const codegen = this.getCodegen(formatString);
 
-    return codegen.getFormatter();
+    const formatter = codegen.getFormatter();
+    this.formatterCache.set(formatString, formatter);
+    const parser = codegen.getParser();
+    return [formatter, parser] as const;
   }
 
   compileTurbo(formatString: string) {
-    if (this.formatterCache.has(formatString)) {
-      return this.formatterCache.get(formatString)!;
-    }
-
     const codegen = this.getCodegen(formatString);
 
-    return codegen.getTurboFormatter();
+    const formatter = codegen.getTurboFormatter();
+    const parser = codegen.getParser();
+    return [formatter, parser] as const;
   }
 }
