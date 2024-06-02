@@ -73,6 +73,8 @@ export class DateParser {
       this.handleRule(value, rule, date);
     }
 
+    this.pos = 0;
+
     return date;
   }
 }
